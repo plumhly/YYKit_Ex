@@ -163,6 +163,7 @@ typedef NS_ENUM(NSUInteger, YYAnimatedImageType) {
          if (_buffer.count) {
              NSMutableDictionary *holder = _buffer;
              _buffer = [NSMutableDictionary new];
+             //在比较空闲的时候释放image
              dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
                  // Capture the dictionary to global queue,
                  // release these images in background to avoid blocking UI thread.

@@ -23,6 +23,13 @@
     return [[YYWeakProxy alloc] initWithTarget:target];
 }
 
+
+/*
+ Method resolution: 首先，Objective-C 运行时会调用 +resolveInstanceMethod: 或者 +resolveClassMethod:
+ Fast forwarding: forwardingTargetForSelector:
+ Normal forwarding: forwardInvocation:  methodSignatureForSelector:
+ */
+
 - (id)forwardingTargetForSelector:(SEL)selector {
     return _target;
 }
