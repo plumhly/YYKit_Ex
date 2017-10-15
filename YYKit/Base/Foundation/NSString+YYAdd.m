@@ -341,6 +341,7 @@ YYSYNTH_DUMMY_CLASS(NSString_YYAdd)
 }
 
 - (NSString *)stringByAppendingNameScale:(CGFloat)scale {
+    //__FLT_EPSILON__ 是浮点数的可接受误差， 如 double 0.5 可能是 0.4999999999
     if (fabs(scale - 1) <= __FLT_EPSILON__ || self.length == 0 || [self hasSuffix:@"/"]) return self.copy;
     return [self stringByAppendingFormat:@"@%@x", @(scale)];
 }
