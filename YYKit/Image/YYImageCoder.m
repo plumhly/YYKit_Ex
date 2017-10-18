@@ -1604,7 +1604,7 @@ CGImageRef YYCGImageCreateWithWebPData(CFDataRef webpData,
     _data = data;
     
     YYImageType type = YYImageDetectType((__bridge CFDataRef)data);
-    if (_sourceTypeDetected) {
+    if (_sourceTypeDetected) {//是否是同类型的图片
         if (_type != type) {
             return NO;
         } else {
