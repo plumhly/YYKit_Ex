@@ -400,6 +400,8 @@ static void yy_png_info_release(yy_png_info *info) {
  */
 static yy_png_info *yy_png_info_create(const uint8_t *data, uint32_t length) {
     if (length < 32) return NULL;
+    //8字节的PNG文件署名域用来识别该文件是不是PNG文件 89    50    4e    47    0d    0a    1a    0a
+
     if (*((uint32_t *)data) != YY_FOUR_CC(0x89, 0x50, 0x4E, 0x47)) return NULL;
     if (*((uint32_t *)(data + 4)) != YY_FOUR_CC(0x0D, 0x0A, 0x1A, 0x0A)) return NULL;
     
