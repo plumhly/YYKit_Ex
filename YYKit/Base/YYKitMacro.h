@@ -313,7 +313,9 @@ static inline void dispatch_sync_on_main_queue(void (^block)()) {
 /**
  Initialize a pthread mutex.
  */
+//__unused 抹去unused warning
 static inline void pthread_mutex_init_recursive(pthread_mutex_t *mutex, bool recursive) {
+    //宏的作用是判断x是否0，c函数执行成功就会返回0
 #define YYMUTEX_ASSERT_ON_ERROR(x_) do { \
 __unused volatile int res = (x_); \
 assert(res == 0); \
@@ -328,6 +330,7 @@ assert(res == 0); \
         YYMUTEX_ASSERT_ON_ERROR(pthread_mutex_init (mutex, &attr));
         YYMUTEX_ASSERT_ON_ERROR(pthread_mutexattr_destroy (&attr));
     }
+    //取消 YYMUTEX_ASSERT_ON_ERROR 定义
 #undef YYMUTEX_ASSERT_ON_ERROR
 }
 

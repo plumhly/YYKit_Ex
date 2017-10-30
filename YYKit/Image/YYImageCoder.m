@@ -57,7 +57,8 @@ static inline uint16_t yy_swap_endian_uint16(uint16_t value) {
     (uint16_t) ((value & 0x00FF) << 8) |
     (uint16_t) ((value & 0xFF00) >> 8) ;
 }
-
+/*Big-Endian: 低地址存放高位
+ Little-Endian: 低地址存放低位*/
 static inline uint32_t yy_swap_endian_uint32(uint32_t value) {
     return
     (uint32_t)((value & 0x000000FFU) << 24) |
@@ -409,8 +410,15 @@ static yy_png_info *yy_png_info_create(const uint8_t *data, uint32_t length) {
     yy_png_chunk_info *chunks = malloc(sizeof(yy_png_chunk_info) * chunk_realloc_num);
     if (!chunks) return NULL;
     
+    /*
+    Length(长度)                       4字节    指定数据块中数据域的长度，其长度不超过(231－1)字节
+    Chunk Type Code(数据块类型码)        4字节    数据块类型码由ASCII字母(A-Z和a-z)组成
+    Chunk Data(数据块数据)              可变长度    存储按照Chunk Type Code指定的数据
+    CRC(循环冗余检测)                    4字节    存储用来检测是否有错误的循环冗余码
+    */
+    
     // parse png chunks
-    uint32_t offset = 8;
+    uint32_t offset = 8;//绕过文件署名
     uint32_t chunk_num = 0;
     uint32_t chunk_capacity = chunk_realloc_num;
     uint32_t apng_loop_num = 0;
@@ -431,8 +439,8 @@ static yy_png_info *yy_png_info_create(const uint8_t *data, uint32_t length) {
         yy_png_chunk_info *chunk = chunks + chunk_num;
         const uint8_t *chunk_data = data + offset;
         chunk->offset = offset;
-        chunk->length = yy_swap_endian_uint32(*((uint32_t *)chunk_data));
-        if ((uint64_t)chunk->offset + (uint64_t)chunk->length + 12 > length) {
+        chunk->length = yy_swap_endian_uint32(*((uint32_t *)chunk_data));//左右数据位置调换
+        if ((uint64_t)chunk->offset + (uint64_t)chunk->length + 12 > length) {//是否是一个完整的 数据， 12是3个4字节
             free(chunks);
             return NULL;
         }
@@ -444,6 +452,13 @@ static yy_png_info *yy_png_info_create(const uint8_t *data, uint32_t length) {
         offset += 12 + chunk->length;
         
         switch (chunk->fourcc) {
+                /*
+                 The `acTL` chunk contains:
+                 
+                 byte
+                 0   num_frames     (unsigned int)    Number of frames
+                 4   num_plays      (unsigned int)    Number of times to loop this APNG.  0                    indicates infinite looping.
+                 */
             case YY_FOUR_CC('a', 'c', 'T', 'L') : {
                 if (chunk->length == 8) {
                     apng_frame_number = yy_swap_endian_uint32(*((uint32_t *)(chunk_data + 8)));
@@ -452,6 +467,18 @@ static yy_png_info *yy_png_info_create(const uint8_t *data, uint32_t length) {
                     apng_chunk_error = true;
                 }
             } break;
+                /**fcTL
+     byte
+     0    sequence_number       (unsigned int)   Sequence number of the animation chunk, starting from 0
+     4    width                 (unsigned int)   Width of the following frame
+     8    height                (unsigned int)   Height of the following frame
+     12    x_offset              (unsigned int)   X position at which to render the following frame
+     16    y_offset              (unsigned int)   Y position at which to render the following frame
+     20    delay_num             (unsigned short) Frame delay fraction numerator
+     22    delay_den             (unsigned short) Frame delay fraction denominator
+     24    dispose_op            (byte)           Type of frame area disposal to be done after rendering this frame
+     25    blend_op              (byte)           Type of frame area rendering for this frame
+                 */
             case YY_FOUR_CC('f', 'c', 'T', 'L') :
             case YY_FOUR_CC('f', 'd', 'A', 'T') : {
                 if (chunk->fourcc == YY_FOUR_CC('f', 'c', 'T', 'L')) {
